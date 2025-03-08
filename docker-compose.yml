@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: users
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d users"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+
+  user-service:
+    build: ./user_service
+    container_name: user-service
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://user:password@db/users
+      SECRET_KEY: super_secret_key
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+
+  api-gateway:
+    build: ./api_gateway
+    container_name: api-gateway
+    restart: always
+    environment:
+      USER_SERVICE_URL: http://user-service:8001
+    depends_on:
+      - user-service
+    ports:
+      - "8000:8000"
+
+  test:
+    build: ./test
+    container_name: test
+    environment:
+      API_GATEWAY_URL: http://api-gateway:8000
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:

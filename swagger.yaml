@@ -1,0 +1,172 @@
+openapi: 3.0.0
+info:
+  title: User Service API
+  version: 1.0.0
+tags:
+  - name: Authentication
+    description: Operations related to user authentication
+  - name: User Profile
+    description: Operations related to user profiles
+servers:
+  - url: http://89.169.135.58:8000
+paths:
+  /register:
+    post:
+      summary: Register a new user
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegister'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                    
+  /login:
+    post:
+      summary: User login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1..."
+                  token_type:
+                    type: string
+                    example: "bearer"
+  /profile:
+    get:
+      summary: Get user profile
+      tags:
+        - User Profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+  /update-profile:
+    put:
+      summary: Update user profile
+      tags:
+        - User Profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfo'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Profile updated successfully"
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserRegister:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "password123"
+        user_info:
+          $ref: '#/components/schemas/UserInfo'
+    UserLogin:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "password123"
+    UserInfo:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        birth_date:
+          type: string
+          example: "1990-01-01"
+        phone:
+          type: string
+          example: "+1234567890"
+    UserProfile:
+      type: object
+      properties:
+        email:
+          type: string
+          example: "user@example.com"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        birth_date:
+          type: string
+          example: "1990-01-01"
+        phone:
+          type: string
+          example: "+1234567890"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T12:00:00Z"
