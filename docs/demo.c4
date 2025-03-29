@@ -1,0 +1,83 @@
+specification {
+    element person {
+        style {
+            shape person
+            color green
+        }
+    }
+    element softwareSystem
+    element container
+}
+
+model {
+    user = person "Пользователь"
+
+    socialNetwork = softwareSystem "Social Network" {
+        apiGateway = container "API Gateway" {
+            description "Перенаправляет запросы в соответствующие сервисы."
+        }
+
+        userService = container "User Service" {
+            description "Обрабатывает запросы, связанные с пользователями, такие как регистрация и аутентификация. Также хранит всю информацию по ним"
+        }
+
+        statisticService = container "Statistic Service" {
+            description "Обрабатывает события, связанные с активностью пользователей, такими как просмотры, лайки и комментарии."
+        }
+
+        postCommentService = container "Post and Comment Service" {
+            description "Обрабатывает запросы, связанные с постами и комментариями, включая их создание, обновление и удаление."
+        }
+
+        clickhouseDb = container "Clickhouse" {
+            description "Хранение статистики пользователей"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+
+        postgresDb = container "PostgreSQL" {
+            description "Хранение данных пользователей"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+
+        cassandraDb = container "Cassandra" {
+            description "Хранение постов и комментариев"
+            technology "Database"
+            style {
+                shape cylinder
+            }
+        }
+
+        kafka = container "Kafka" {
+            description "Обмен событиями между сервисами"
+            technology "Message Broker"
+            style {
+                shape queue
+            }
+        }
+    }
+
+    user -> socialNetwork.apiGateway "Использует" "REST API"
+    
+    socialNetwork.apiGateway -> socialNetwork.userService "Маршрутизирует" "REST API"
+    socialNetwork.apiGateway -> socialNetwork.statisticService "Маршрутизирует" "REST API"
+    socialNetwork.apiGateway -> socialNetwork.postCommentService "Маршрутизирует" "REST API"
+
+    socialNetwork.userService -> socialNetwork.postgresDb "Читает/Пишет" "SQL"
+    socialNetwork.statisticService -> socialNetwork.clickhouseDb "Читает/Пишет" "SQL"
+    socialNetwork.postCommentService -> socialNetwork.cassandraDb "Читает/Пишет" "CQL"
+
+    socialNetwork.statisticService -> socialNetwork.kafka "Подписывается" "views/likes/comments"
+    socialNetwork.postCommentService -> socialNetwork.kafka "Публикует" "views/likes/comments"    
+}
+
+views {
+   view index {
+        include *
+    }
+}

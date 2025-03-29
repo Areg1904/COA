@@ -1,0 +1,1 @@
+python -m grpc_tools.protoc -I ./proto --python_out=generated_code/ --grpc_python_out=generated_code/ ./proto/posts.proto
