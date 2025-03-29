@@ -2,14 +2,16 @@ FROM python:3.12
 
 WORKDIR /app
 
-COPY api_gateway/requirements.txt .
+COPY post_comment_service/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY ./generated_code ./generated_code
-COPY ./api_gateway ./api_gateway
+COPY ./post_comment_service ./post_comment_service
 
 ENV PYTHONPATH="${PYTHONPATH}:/app/generated_code"
 
-WORKDIR /app/api_gateway
+WORKDIR /app/post_comment_service
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8002
+
+CMD ["python", "main.py"]

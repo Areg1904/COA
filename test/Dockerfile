@@ -1,9 +1,15 @@
 FROM python:3.12
 
-WORKDIR /test
+WORKDIR /app
 
-COPY requirements.txt .
+COPY test/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY . .
+
+COPY ./generated_code ./generated_code
+COPY ./test ./test
+
+ENV PYTHONPATH="${PYTHONPATH}:/app/generated_code"
+
+WORKDIR /app/test
 
 CMD ["pytest", "test.py"]

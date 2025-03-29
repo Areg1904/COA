@@ -1,2 +1,4 @@
 pytest
 httpx
+grpcio
+grpcio-tools

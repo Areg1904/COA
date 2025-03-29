@@ -12,7 +12,7 @@ from pydantic import BaseModel, EmailStr, Field
 from jose import JWTError, jwt
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db/users")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@db-user-service/users")
 SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
@@ -136,3 +136,7 @@ def get_profile(user_id: UUID = Depends(verify_jwt_token), db: Session = Depends
         "created_at": user.created_at,
         "updated_at": user.updated_at,
     }
+
+@app.get("/verify-jwt")
+def get_profile(user_id: UUID = Depends(verify_jwt_token)):
+    return {"user_id": user_id}

@@ -1,9 +1,9 @@
 version: "3.8"
 
 services:
-  db:
-    image: postgres:latest
-    container_name: postgres
+  db-user-service:
+    image: postgres:15.5
+    container_name: db-user-service
     restart: always
     environment:
       POSTGRES_USER: user
@@ -12,9 +12,27 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_users:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user -d users"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
+
+  db-post-comment-service:
+    image: postgres:15.5
+    container_name: db-post-comment-service
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: posts
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_posts_comments:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d posts"]
       interval: 5s
       retries: 5
       start_period: 10s
@@ -24,27 +42,46 @@ services:
     container_name: user-service
     restart: always
     environment:
-      DATABASE_URL: postgresql://user:password@db/users
+      DATABASE_URL: postgresql://user:password@db-user-service/users
       SECRET_KEY: super_secret_key
     depends_on:
-      db:
+      db-user-service:
         condition: service_healthy
     ports:
       - "8001:8001"
 
+  post-comment-service:
+    build:
+      context: .
+      dockerfile: ./post_comment_service/Dockerfile
+    container_name: post-comment-service
+    restart: always
+    environment:
+      GRPC_PORT: 8002
+    depends_on:
+      db-post-comment-service:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+
   api-gateway:
-    build: ./api_gateway
+    build:
+      context: .
+      dockerfile: ./api_gateway/Dockerfile
     container_name: api-gateway
     restart: always
     environment:
       USER_SERVICE_URL: http://user-service:8001
     depends_on:
       - user-service
+      - post-comment-service
     ports:
       - "8000:8000"
 
   test:
-    build: ./test
+    build:
+      context: .
+      dockerfile: ./test/Dockerfile
     container_name: test
     environment:
       API_GATEWAY_URL: http://api-gateway:8000
@@ -52,4 +89,5 @@ services:
       - api-gateway
 
 volumes:
-  postgres_data:
+  postgres_data_users:
+  postgres_data_posts_comments:
